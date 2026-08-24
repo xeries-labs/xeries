@@ -217,9 +217,9 @@ def global_importance(
 ```mermaid
 flowchart TB
     Model[Model]
-    
+
     Model --> Check{Model Type?}
-    
+
     Check -->|LightGBM, XGBoost,<br/>RandomForest| Tree[TreeExplainer<br/>Batch - Fast]
     Check -->|Ridge, Lasso,<br/>LinearRegression| Linear[LinearExplainer<br/>Batch]
     Check -->|Keras, PyTorch,<br/>MLP| Deep[DeepExplainer<br/>Batch]

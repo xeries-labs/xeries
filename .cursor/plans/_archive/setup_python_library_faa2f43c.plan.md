@@ -295,5 +295,3 @@ nav:
 | Linting/Formatting     | ruff                                  |
 | Type checking          | mypy                                  |
 | Documentation          | mkdocs, mkdocs-material, mkdocstrings |
-
-

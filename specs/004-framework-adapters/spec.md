@@ -1,9 +1,9 @@
 # Feature Specification: Framework adapters (`xeries.adapters`)
 
-**Feature Branch**: `feat/sdd-adoption` (backfill)  
-**Created**: 2026-04-26  
-**Status**: Backfilled from implementation  
-**Home repo**: xeries  
+**Feature Branch**: `feat/sdd-adoption` (backfill)
+**Created**: 2026-04-26
+**Status**: Backfilled from implementation
+**Home repo**: xeries
 **Input**: SDD bootstrap — describe the existing public surface of `xeries.adapters`.
 
 > **Status: Backfilled from implementation** — this spec describes the code as it

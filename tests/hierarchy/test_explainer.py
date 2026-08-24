@@ -9,13 +9,14 @@ import numpy as np
 import pandas as pd
 import pytest
 
+from xeries.core.base import BaseExplainer
 from xeries.core.types import SHAPResult
 from xeries.hierarchy.definition import HierarchyDefinition
 from xeries.hierarchy.explainer import HierarchicalExplainer
 from xeries.hierarchy.types import HierarchicalResult
 
 
-class MockSHAPExplainer:
+class MockSHAPExplainer(BaseExplainer):
     """Mock SHAP explainer for testing."""
 
     def __init__(self, feature_names: list[str]) -> None:
