@@ -264,10 +264,10 @@ class MyFrameworkAdapter(BaseAdapter):
         """Make predictions using the wrapped model."""
         # Transform X as needed by your framework
         features = self._prepare_features(X)
-        
+
         # Call the model's prediction method
         predictions = self.model.my_predict_method(features)
-        
+
         return np.asarray(predictions)
 
     def _prepare_features(self, X):

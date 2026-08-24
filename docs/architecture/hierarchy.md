@@ -166,8 +166,8 @@ aggregator = HierarchicalAggregator(hierarchy)
 
 # Aggregate SHAP results
 hier_result = aggregator.aggregate_shap(
-    shap_result, 
-    X, 
+    shap_result,
+    X,
     include_raw=True  # Store raw values for violin plots
 )
 
@@ -246,13 +246,13 @@ graph TB
     subgraph HierarchicalResult
         levels["levels: [global, state, store]"]
         features["features: [lag_1, lag_2, price, ...]"]
-        
+
         subgraph importance_by_level
             global_imp["global: {all: {lag_1: 0.5, ...}}"]
             state_imp["state: {TX: {...}, WI: {...}}"]
             store_imp["store: {TX_S1: {...}, TX_S2: {...}, ...}"]
         end
-        
+
         subgraph raw_values_by_level
             global_raw["global: {all: array(n, f)}"]
             state_raw["state: {TX: array(...), WI: array(...)}"]

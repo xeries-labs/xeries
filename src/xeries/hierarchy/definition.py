@@ -127,7 +127,8 @@ class HierarchyDefinition:
         self, data: pd.DataFrame, grouping_levels: list[str]
     ) -> dict[str, pd.Index]:
         """Get cohorts using column-based strategy."""
-        level_to_col = dict(zip(self.levels, self.columns, strict=True))  # type: ignore[arg-type]
+        assert self.columns is not None, "columns must be set for column-based strategy"
+        level_to_col = dict(zip(self.levels, self.columns, strict=True))
         group_cols = [level_to_col[lv] for lv in grouping_levels]
 
         cohorts: dict[str, pd.Index] = {}
@@ -161,9 +162,10 @@ class HierarchyDefinition:
 
         level_values = []
         for sid in series_ids:
-            if sid not in self.explicit_mapping:  # type: ignore[operator]
+            assert self.explicit_mapping is not None
+            if sid not in self.explicit_mapping:
                 raise KeyError(f"Series '{sid}' not found in explicit_mapping")
-            mapping = self.explicit_mapping[sid]  # type: ignore[index]
+            mapping = self.explicit_mapping[sid]
             level_values.append({lv: mapping[lv] for lv in grouping_levels})
 
         parsed_df = pd.DataFrame(level_values, index=data.index)
@@ -288,12 +290,11 @@ class HierarchyDefinition:
                 data[level] = parsed_df[level]
 
         elif self.explicit_mapping is not None:
+            mapping = self.explicit_mapping
             series_ids = self._get_series_ids(data)
 
             for level in self.levels:
-                data[level] = series_ids.map(
-                    lambda sid, lv=level: self.explicit_mapping[sid][lv]  # type: ignore[index]
-                )
+                data[level] = series_ids.map(lambda sid, lv=level: mapping[sid][lv])
 
         return data
 

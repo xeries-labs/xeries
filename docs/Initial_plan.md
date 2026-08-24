@@ -1,12 +1,12 @@
 A Python Library for Conditional Feature Importance in Multi-Time Series Forecasting
 Introduction
-In the domain of time series forecasting, the use of global models to predict multiple time series simultaneously has gained significant traction 
- . These models, which are trained on a diverse collection of time series, often demonstrate superior generalization and can adeptly handle scenarios like cold starts for new series 
- . However, a persistent challenge is understanding the "why" behind their predictions, a task that falls to feature importance techniques which aim to reveal the variables that most significantly influence the forecast 
+In the domain of time series forecasting, the use of global models to predict multiple time series simultaneously has gained significant traction
+ . These models, which are trained on a diverse collection of time series, often demonstrate superior generalization and can adeptly handle scenarios like cold starts for new series
+ . However, a persistent challenge is understanding the "why" behind their predictions, a task that falls to feature importance techniques which aim to reveal the variables that most significantly influence the forecast
  .
 
-This research document outlines a plan for implementing a new Python library specifically for conditional feature importance within the context of multi-time series forecasting using global models. A critical consideration is that many features are "conditioned to the series," meaning their values and structure are intrinsically dependent on the specific time series they belong to 
- . This dependency introduces complexities that standard feature importance methods often fail to address adequately, as they can create unrealistic data instances by breaking these correlations, leading to misleading insights 
+This research document outlines a plan for implementing a new Python library specifically for conditional feature importance within the context of multi-time series forecasting using global models. A critical consideration is that many features are "conditioned to the series," meaning their values and structure are intrinsically dependent on the specific time series they belong to
+ . This dependency introduces complexities that standard feature importance methods often fail to address adequately, as they can create unrealistic data instances by breaking these correlations, leading to misleading insights
  .
 
 The objective here is to explore the foundational concepts, review existing tools with a deeper technical lens, and propose a detailed design and implementation strategy—including working code examples—for a new, specialized Python library to meet this challenge.
@@ -15,62 +15,62 @@ Core Concepts
 A robust library must be built on a clear understanding of the underlying principles of global modeling and the specific challenges of series-dependent features.
 
 Multi-Time Series Forecasting and Global Models
-Multi-Time Series Forecasting: This practice involves predicting future values for a collection of related time series, such as forecasting sales for every product in a store or predicting energy demand across multiple regions 
+Multi-Time Series Forecasting: This practice involves predicting future values for a collection of related time series, such as forecasting sales for every product in a store or predicting energy demand across multiple regions
  .
 
-Global Models: Instead of training a separate model for each time series (a local approach), a single "global" model is trained on all the time series data combined 
- . This allows the model to learn patterns and relationships that are common across different series 
- . Popular architectures for these models include Recurrent Neural Networks (RNNs), Long Short-Term Memory (LSTMs), Transformers, and tree-based models like LightGBM 
- . Prominent Python libraries like Darts, GluonTS, sktime, and skforecast provide powerful frameworks for building and training these models 
+Global Models: Instead of training a separate model for each time series (a local approach), a single "global" model is trained on all the time series data combined
+ . This allows the model to learn patterns and relationships that are common across different series
+ . Popular architectures for these models include Recurrent Neural Networks (RNNs), Long Short-Term Memory (LSTMs), Transformers, and tree-based models like LightGBM
+ . Prominent Python libraries like Darts, GluonTS, sktime, and skforecast provide powerful frameworks for building and training these models
  .
 
 Feature Importance in Time Series
-Feature importance methods quantify the contribution of each input feature to a model's predictions 
+Feature importance methods quantify the contribution of each input feature to a model's predictions
  . Common model-agnostic techniques include:
 
-Permutation Feature Importance (PFI): This method measures the increase in a model's prediction error after the values of a single feature are randomly shuffled 
- . A large increase in error implies that the model relies heavily on that feature for its accuracy 
- . However, standard PFI can be misleading when features are dependent, as it may create unrealistic data instances by breaking these dependencies 
+Permutation Feature Importance (PFI): This method measures the increase in a model's prediction error after the values of a single feature are randomly shuffled
+ . A large increase in error implies that the model relies heavily on that feature for its accuracy
+ . However, standard PFI can be misleading when features are dependent, as it may create unrealistic data instances by breaking these dependencies
  .
 
-Conditional Permutation Feature Importance (cPFI): This technique addresses the limitations of standard PFI by permuting a feature's values only within subgroups where the feature distributions are similar, thus preserving dependencies 
+Conditional Permutation Feature Importance (cPFI): This technique addresses the limitations of standard PFI by permuting a feature's values only within subgroups where the feature distributions are similar, thus preserving dependencies
  .
 
 SHAP (SHapley Additive exPlanations): Drawing from cooperative game theory, SHAP calculates the marginal contribution of each feature to a specific prediction . It offers both global (average impact) and local (per-prediction) explanations .
 
-Model-Specific Importance: Certain models, particularly tree-based ensembles, provide their own importance metrics based on feature usage (e.g., gain or split count) 
+Model-Specific Importance: Certain models, particularly tree-based ensembles, provide their own importance metrics based on feature usage (e.g., gain or split count)
  .
 
 The Challenge of Conditional, Series-Dependent Features
-The central challenge this research addresses is the proper handling of features that are "conditioned to the series." These are not static, global features but are dynamically generated or have context specific to each time series 
+The central challenge this research addresses is the proper handling of features that are "conditioned to the series." These are not static, global features but are dynamically generated or have context specific to each time series
  . Key examples include:
 
-Autoregressive Lags: The value of the series at a previous time step (e.g., lag_1 is yesterday's sales for a specific product) 
+Autoregressive Lags: The value of the series at a previous time step (e.g., lag_1 is yesterday's sales for a specific product)
  .
 
 Rolling Statistics: A rolling 7-day average of sales, calculated independently for each product .
 
-Time-Based Features: Features like "day of the week" or "month," which are relative to each series' own timeline 
+Time-Based Features: Features like "day of the week" or "month," which are relative to each series' own timeline
  .
 
-Series Identifiers: A feature explicitly added to the data to tell the model which series a particular data point belongs to. This is crucial for the model to learn series-specific patterns 
+Series Identifiers: A feature explicitly added to the data to tell the model which series a particular data point belongs to. This is crucial for the model to learn series-specific patterns
  .
 
-The problem is that standard feature importance methods can break the inherent structure of these features 
- . For instance, randomly shuffling an autoregressive lag_1 feature across the entire dataset would mean pairing a lag from "Product A" with a target from "Product B," creating nonsensical data and rendering the importance score invalid 
+The problem is that standard feature importance methods can break the inherent structure of these features
+ . For instance, randomly shuffling an autoregressive lag_1 feature across the entire dataset would mean pairing a lag from "Product A" with a target from "Product B," creating nonsensical data and rendering the importance score invalid
  . The value of a lag or a rolling mean is only meaningful within the context of its original series.
 
 Existing Libraries and Approaches
 Several powerful Python libraries facilitate multi-series forecasting, but their interpretability features require careful consideration for this conditional context.
 
-Darts: A popular and flexible library supporting a wide array of models, from classical ARIMA to deep learning architectures like N-BEATS and Transformers 
- . It allows for training on multiple time series with past and future covariates 
+Darts: A popular and flexible library supporting a wide array of models, from classical ARIMA to deep learning architectures like N-BEATS and Transformers
+ . It allows for training on multiple time series with past and future covariates
  . While powerful, its documentation does not focus on built-in methods for conditional feature importance that respect series-dependent feature structures.
 
-sktime & Nixtla Suite: sktime is a comprehensive toolbox for time series analysis, while Nixtla's MLForecast and StatsForecast are optimized for high-performance forecasting . These libraries automate many aspects of feature creation and model training, but like others, applying feature importance in a conditional manner requires a specialized approach not provided out-of-the-box 
+sktime & Nixtla Suite: sktime is a comprehensive toolbox for time series analysis, while Nixtla's MLForecast and StatsForecast are optimized for high-performance forecasting . These libraries automate many aspects of feature creation and model training, but like others, applying feature importance in a conditional manner requires a specialized approach not provided out-of-the-box
  .
 
-skforecast: This library excels at using scikit-learn compatible regressors for forecasting and offers robust multi-series capabilities . It is compatible with standard interpretability tools like SHAP and permutation importance 
+skforecast: This library excels at using scikit-learn compatible regressors for forecasting and offers robust multi-series capabilities . It is compatible with standard interpretability tools like SHAP and permutation importance
  . Its transparent methodology for preparing data for a global model serves as an excellent foundation for implementing conditional importance techniques. The ForecasterMultiSeries class, for example, generates a training matrix X with a MultiIndex that explicitly tracks the series identifier and timestamp for each row, which is crucial for our purposes .
 
 Designing a New Python Library: Proposed Methodologies and Implementation
@@ -127,7 +127,7 @@ manual_mapping_dict = {
     'MT_002': 'group_B',
     'MT_003': 'group_A' # Group MT_001 and MT_003 together
 }
-Align Group Labels with the Training Matrix: The training matrix X from ForecasterMultiSeries has a MultiIndex containing the series_id (in the 'level' level). We leverage this to create a corresponding array of group labels for every row in X 
+Align Group Labels with the Training Matrix: The training matrix X from ForecasterMultiSeries has a MultiIndex containing the series_id (in the 'level' level). We leverage this to create a corresponding array of group labels for every row in X
  .
 
 python
@@ -138,7 +138,7 @@ series_ids_for_X = X.index.get_level_values('level')
 # This creates a pandas Series of group labels perfectly aligned with X
 manual_groups = series_ids_for_X.map(manual_mapping_dict)
 manual_groups_array = manual_groups.to_numpy()
-Implement Permutation and Calculate Importance: We use a function to perform the permutation within the manually defined groups and then calculate the increase in model error 
+Implement Permutation and Calculate Importance: We use a function to perform the permutation within the manually defined groups and then calculate the increase in model error
  .
 
 python
@@ -147,10 +147,10 @@ def conditional_permutation(X_original: pd.DataFrame, feature_to_permute: str, g
     rng = np.random.default_rng(123)
     X_permuted = X_original.copy()
     X_permuted['permutation_group'] = groups
-    
+
     permuted_values = X_permuted.groupby('permutation_group')[feature_to_permute].transform(lambda x: rng.permutation(x))
     X_permuted[feature_to_permute] = permuted_values
-    
+
     return X_permuted.drop(columns='permutation_group')
 
 # Conditionally permute the feature using the manual groups
@@ -169,17 +169,17 @@ print(f"--- Manual Dictionary-Based PFI Results for 'lag_1' ---")
 print(f"Permuted MSE (Manual): {permuted_mse_manual:.4f}")
 print(f"Conditional Permutation Importance: {importance_score_manual:.4f}")
 Methodology 2: Automated, Tree-Based Conditional Subgroup PFI (cs-PFI)
-The core innovation of the proposed library would be an automated implementation of the Conditional Subgroup Permutation Feature Importance (cs-PFI) algorithm 
- . This model-agnostic method is more sophisticated because it learns the optimal subgroups for permutation instead of requiring the user to define them 
+The core innovation of the proposed library would be an automated implementation of the Conditional Subgroup Permutation Feature Importance (cs-PFI) algorithm
+ . This model-agnostic method is more sophisticated because it learns the optimal subgroups for permutation instead of requiring the user to define them
  .
 
 Algorithm & Implementation:
 
-Train a Model to Predict the Feature of Interest: The algorithm conditions the permutation of a feature of interest, Xj (e.g., lag_1), on all other features, X-j 
- . To do this, a predictive model, typically a DecisionTreeRegressor, is trained to predict Xj using X-j as predictors 
+Train a Model to Predict the Feature of Interest: The algorithm conditions the permutation of a feature of interest, Xj (e.g., lag_1), on all other features, X-j
+ . To do this, a predictive model, typically a DecisionTreeRegressor, is trained to predict Xj using X-j as predictors
  .
 
-Practical Consideration: The categorical series identifier must be numerically encoded (e.g., via one-hot encoding) for the tree model. To create stable subgroups, the tree should be pruned by setting hyperparameters like max_depth or min_samples_leaf 
+Practical Consideration: The categorical series identifier must be numerically encoded (e.g., via one-hot encoding) for the tree model. To create stable subgroups, the tree should be pruned by setting hyperparameters like max_depth or min_samples_leaf
  .
 
 python
@@ -201,18 +201,18 @@ X_tree = pd.concat([
 # Train the partitioning tree with pruning for stable subgroups
 tree_model = DecisionTreeRegressor(max_depth=4, min_samples_leaf=0.05, random_state=123)
 tree_model.fit(X_tree, y_tree)
-Define Homogeneous Subgroups via Leaf Nodes: The terminal leaf nodes of the trained decision tree define a set of disjoint subgroups 
- . We use the tree's .apply() method to get the leaf index for each observation, which serves as our group identifier 
+Define Homogeneous Subgroups via Leaf Nodes: The terminal leaf nodes of the trained decision tree define a set of disjoint subgroups
+ . We use the tree's .apply() method to get the leaf index for each observation, which serves as our group identifier
  .
 
 python
 # Get the leaf node index for each sample; these are our conditional groups
 partition_groups = tree_model.apply(X_tree)
-Perform Within-Subgroup Permutation: The permutation of feature Xj is then performed with a critical constraint: its values are shuffled only among the observations that fall into the same leaf node (subgroup) 
- . This ensures a value is swapped with another from an observation with similar characteristics, preserving the data's structural integrity 
+Perform Within-Subgroup Permutation: The permutation of feature Xj is then performed with a critical constraint: its values are shuffled only among the observations that fall into the same leaf node (subgroup)
+ . This ensures a value is swapped with another from an observation with similar characteristics, preserving the data's structural integrity
  .
 
-Calculate Final Importance Score: The model's prediction error is calculated on this conditionally permuted dataset. The final cs-PFI score is the increase in error 
+Calculate Final Importance Score: The model's prediction error is calculated on this conditionally permuted dataset. The final cs-PFI score is the increase in error
  .
 
 python
@@ -284,7 +284,7 @@ shap_explainer = cfi.ConditionalSHAP(
 shap_values = shap_explainer.explain_instance(X_train.iloc[...](asc_slot://start-slot-78))
 shap_explainer.plot_instance(shap_values)
 Implementation Considerations
-Data Structures: The library must efficiently handle standard multi-series data formats, primarily pandas DataFrames with MultiIndex, as produced by libraries like skforecast 
+Data Structures: The library must efficiently handle standard multi-series data formats, primarily pandas DataFrames with MultiIndex, as produced by libraries like skforecast
  .
 
 Scalability: Feature importance calculations are computationally intensive. The library should leverage parallel processing via tools like joblib or dask to distribute computations, especially for the cs-PFI algorithm.
@@ -292,13 +292,13 @@ Scalability: Feature importance calculations are computationally intensive. The 
 Extensibility: A modular design will be crucial for adding new conditional importance methods or supporting more forecasting model types in the future.
 
 Executive Summary
-The growing adoption of global models for multi-time series forecasting has created a critical need for specialized interpretability tools. Standard feature importance methods are ill-suited for this context because they fail to respect the conditional nature of series-dependent features (like lags and series identifiers), leading to unrealistic data permutations and unreliable insights 
+The growing adoption of global models for multi-time series forecasting has created a critical need for specialized interpretability tools. Standard feature importance methods are ill-suited for this context because they fail to respect the conditional nature of series-dependent features (like lags and series identifiers), leading to unrealistic data permutations and unreliable insights
  .
 
-This research proposes the development of a new Python library dedicated to conditional feature importance. The feasibility of this proposal is demonstrated through detailed, practical implementations of two core methodologies. The first is a manual, dictionary-based PFI, which allows users to inject domain knowledge by defining explicit permutation groups 
- . The second, and the core innovation, is the automated Tree-Based Conditional Subgroup Permutation Feature Importance (cs-PFI) algorithm 
- . This advanced, model-agnostic technique addresses feature dependencies by training a decision tree to learn homogeneous data subgroups and then constraining permutations within those groups 
- . By including the series identifier as a feature in this process, cs-PFI can naturally handle the series-specific conditioning that is central to the multi-series forecasting problem 
+This research proposes the development of a new Python library dedicated to conditional feature importance. The feasibility of this proposal is demonstrated through detailed, practical implementations of two core methodologies. The first is a manual, dictionary-based PFI, which allows users to inject domain knowledge by defining explicit permutation groups
+ . The second, and the core innovation, is the automated Tree-Based Conditional Subgroup Permutation Feature Importance (cs-PFI) algorithm
+ . This advanced, model-agnostic technique addresses feature dependencies by training a decision tree to learn homogeneous data subgroups and then constraining permutations within those groups
+ . By including the series identifier as a feature in this process, cs-PFI can naturally handle the series-specific conditioning that is central to the multi-series forecasting problem
  . This is complemented by a proposed conditional approach to SHAP, which uses series-specific background data for more relevant explanations.
 
 By providing a user-friendly API that automates these advanced techniques, integrates with popular forecasting frameworks like skforecast, leverages parallel processing for scalability, and produces clear visualizations, this new library would empower data scientists to gain deeper, more accurate insights into the behavior of their global forecasting models. This advancement will foster more trustworthy models, guide better feature engineering, and ultimately enable more informed, data-driven decision-making.

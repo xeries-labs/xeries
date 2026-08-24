@@ -133,7 +133,7 @@ flowchart LR
     Level["level='state'"]
     Cohort["cohort='TX'"]
     Plot[Horizontal Bar Chart]
-    
+
     HResult --> Plot
     Level --> Plot
     Cohort --> Plot
@@ -160,7 +160,7 @@ flowchart LR
     Level["level='state'"]
     Cohort["cohort='TX'"]
     Plot[Beeswarm Plot<br/>colored by feature value]
-    
+
     HResult --> Plot
     Level --> Plot
     Cohort --> Plot
@@ -187,7 +187,7 @@ Grid of plots for all hierarchy levels.
 ```mermaid
 flowchart TB
     HResult[HierarchicalResult]
-    
+
     subgraph Grid [Output Grid]
         R1C1[Global: all]
         R2C1[State: TX]
@@ -196,7 +196,7 @@ flowchart TB
         R3C2[Store: TX_S2]
         R3C3[Store: WI_S1]
     end
-    
+
     HResult --> Grid
 ```
 
