@@ -9,8 +9,11 @@ unresolved-reference = "warn"
 
 [analysis]
 allowed-unresolved-imports = ["shap", "skforecast", "shapiq", "econml.**", "dowhy.**", "causallearn.**", "networkx"]
-# Replace all pandas and numpy imports with Any
-replace-imports-with-any = ["pandas.**", "numpy.**"]
+# Replace pandas / numpy / matplotlib imports with Any.
+# These libraries have dynamic APIs that don't lend themselves to static
+# type-checking, and matplotlib stubs in particular differ between OS /
+# matplotlib versions, producing inconsistent CI vs local results.
+replace-imports-with-any = ["pandas.**", "numpy.**", "matplotlib.**"]
 
 
 [src]

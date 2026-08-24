@@ -1,0 +1,4 @@
+[submodule ".specify"]
+	path = .specify
+	url = https://github.com/xeries-labs/xeries-governance.git
+	branch = main

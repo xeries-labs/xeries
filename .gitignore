@@ -83,3 +83,7 @@ site/
 .DS_Store
 Thumbs.db
 docs/experiment.md
+
+# Local-only research articles / preprints (kept out of the library repo;
+# the manuscript itself lives in a separate article repo).
+articles/

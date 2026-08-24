@@ -45,11 +45,13 @@ skforecast = ["skforecast>=0.21.0"]
 shapiq = ["shapiq>=1.0"]
 causal-discovery = ["causal-learn>=0.1.3"]
 darts = ["u8darts>=0.34"]
-dashboard = ["jinja2>=3.1"]
 # Note: causal deps (dowhy, econml) are not listed here because econml
 # requires shap<0.49.0, conflicting with shap>=0.49.1 in core deps.
 # Users should install them manually in a compatible environment.
-all = ["xeries[skforecast,shapiq,causal-discovery,darts,dashboard]"]
+# Note: the `dashboard` extra (jinja2) was removed in xeries 0.3.0 — HTML
+# report generation moved to the sibling `xeries-dashboard` repo per
+# governance v1.2.0 (roadmap row specs/013-dashboard).
+all = ["xeries[skforecast,shapiq,causal-discovery,darts]"]
 notebooks = [
     "jupyter>=1.0",
     "ipykernel>=6.29",

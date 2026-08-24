@@ -2,234 +2,463 @@
 
 from __future__ import annotations
 
-# import numpy as np
-# import pandas as pd
-# import pytest
-# from sklearn.ensemble import RandomForestRegressor
+import numpy as np
+import pandas as pd
+import pytest
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.linear_model import Ridge
 
-# from xeries.core.types import SHAPResult
+from xeries.core.types import SHAPResult
+from xeries.importance.shap import ConditionalSHAP
 
 
-class TestConditionalSHAP:
-    """Tests for ConditionalSHAP."""
+class TestConditionalSHAPInit:
+    """Tests for ConditionalSHAP initialization."""
 
-    def first(self) -> None:
-        """Placeholder test to ensure test discovery works."""
-        assert True
+    @pytest.fixture
+    def sample_data(self) -> tuple[pd.DataFrame, RandomForestRegressor]:
+        """Create sample data and fitted model."""
+        np.random.seed(42)
+        n_samples = 60
 
-    # @pytest.fixture
-    # def small_data(self) -> tuple[pd.DataFrame, pd.Series]:
-    #     """Create small dataset for SHAP testing (SHAP is slow)."""
-    #     np.random.seed(42)
-    #     n_samples = 30
+        index = pd.MultiIndex.from_arrays(
+            [
+                np.repeat(["A", "B", "C"], n_samples // 3),
+                pd.date_range("2023-01-01", periods=n_samples, freq="h"),
+            ],
+            names=["level", "date"],
+        )
 
-    #     index = pd.MultiIndex.from_arrays(
-    #         [
-    #             np.repeat(["A", "B", "C"], n_samples // 3),
-    #             pd.date_range("2023-01-01", periods=n_samples, freq="h"),
-    #         ],
-    #         names=["level", "date"],
-    #     )
+        X = pd.DataFrame(
+            {
+                "lag_1": np.random.randn(n_samples),
+                "lag_2": np.random.randn(n_samples),
+                "exog_1": np.random.randn(n_samples),
+            },
+            index=index,
+        )
+        y = X["lag_1"] * 0.5 + X["lag_2"] * 0.3 + np.random.randn(n_samples) * 0.1
 
-    #     X = pd.DataFrame(
-    #         {
-    #             "lag_1": np.random.randn(n_samples),
-    #             "lag_2": np.random.randn(n_samples),
-    #         },
-    #         index=index,
-    #     )
-    #     y = pd.Series(
-    #         X["lag_1"] * 0.5 + X["lag_2"] * 0.3 + np.random.randn(n_samples) * 0.1,
-    #         index=index,
-    #     )
+        model = RandomForestRegressor(n_estimators=5, max_depth=3, random_state=42)
+        model.fit(X.values, y.values)
 
-    #     return X, y
+        return X, model
 
-    # @pytest.fixture
-    # def fitted_model_small(
-    #     self,
-    #     small_data: tuple[pd.DataFrame, pd.Series],
-    # ) -> RandomForestRegressor:
-    #     """Create fitted model for small data."""
-    #     X, y = small_data
-    #     model = RandomForestRegressor(n_estimators=5, max_depth=3, random_state=42)
-    #     model.fit(X.to_numpy(), y.to_numpy())
-    #     return model
+    def test_init_default_params(
+        self, sample_data: tuple[pd.DataFrame, RandomForestRegressor]
+    ) -> None:
+        """Test default initialization parameters."""
+        X, model = sample_data
+        explainer = ConditionalSHAP(model, X, series_col="level")
 
-    # @pytest.mark.slow
-    # def test_init(
-    #     self,
-    #     small_data: tuple[pd.DataFrame, pd.Series],
-    #     fitted_model_small: RandomForestRegressor,
-    # ) -> None:
-    #     """Test explainer initialization."""
-    #     from xeries.importance.shap import ConditionalSHAP
+        assert explainer.series_col == "level"
+        assert explainer.n_background_samples == 100
+        assert explainer.explainer_type == "auto"
+        assert explainer.background_strategy == "series"
 
-    #     X, _ = small_data
-    #     explainer = ConditionalSHAP(
-    #         model=fitted_model_small,
-    #         background_data=X,
-    #         series_col="level",
-    #         n_background_samples=10,
-    #         random_state=42,
-    #     )
+    def test_init_auto_detects_tree_model(
+        self, sample_data: tuple[pd.DataFrame, RandomForestRegressor]
+    ) -> None:
+        """Test that auto detection identifies tree models."""
+        X, model = sample_data
+        explainer = ConditionalSHAP(model, X, series_col="level")
 
-    #     assert explainer.series_col == "level"
-    #     assert explainer.n_background_samples == 10
-    #     assert len(explainer._series_backgrounds) == 3
+        assert explainer._is_batch_capable is True
 
-    # @pytest.mark.slow
-    # def test_explain(
-    #     self,
-    #     small_data: tuple[pd.DataFrame, pd.Series],
-    #     fitted_model_small: RandomForestRegressor,
-    # ) -> None:
-    #     """Test computing SHAP values."""
-    #     from xeries.importance.shap import ConditionalSHAP
+    def test_init_kernel_explainer_type(
+        self, sample_data: tuple[pd.DataFrame, RandomForestRegressor]
+    ) -> None:
+        """Test explicit kernel explainer type."""
+        X, model = sample_data
+        explainer = ConditionalSHAP(model, X, series_col="level", explainer_type="kernel")
 
-    #     X, _ = small_data
-    #     explainer = ConditionalSHAP(
-    #         model=fitted_model_small,
-    #         background_data=X,
-    #         series_col="level",
-    #         n_background_samples=5,
-    #         random_state=42,
-    #     )
+        assert explainer._is_batch_capable is False
+        assert len(explainer._series_backgrounds) == 3
 
-    #     result = explainer.explain(X.iloc[:3])
+    def test_init_global_background_strategy(
+        self, sample_data: tuple[pd.DataFrame, RandomForestRegressor]
+    ) -> None:
+        """Test global background strategy."""
+        X, model = sample_data
+        explainer = ConditionalSHAP(model, X, series_col="level", background_strategy="global")
 
-    #     assert isinstance(result, SHAPResult)
-    #     assert result.shap_values.shape == (3, 2)
-    #     assert len(result.base_values) == 3
-    #     assert result.feature_names == ["lag_1", "lag_2"]
+        assert explainer.background_strategy == "global"
 
-    # @pytest.mark.slow
-    # def test_explain_instance(
-    #     self,
-    #     small_data: tuple[pd.DataFrame, pd.Series],
-    #     fitted_model_small: RandomForestRegressor,
-    # ) -> None:
-    #     """Test explaining a single instance."""
-    #     from xeries.importance.shap import ConditionalSHAP
 
-    #     X, _ = small_data
-    #     explainer = ConditionalSHAP(
-    #         model=fitted_model_small,
-    #         background_data=X,
-    #         series_col="level",
-    #         n_background_samples=5,
-    #         random_state=42,
-    #     )
+class TestConditionalSHAPExplain:
+    """Tests for ConditionalSHAP explain method."""
 
-    #     result = explainer.explain_instance(X.iloc[0])
+    @pytest.fixture
+    def explainer_and_data(self) -> tuple[ConditionalSHAP, pd.DataFrame]:
+        """Create explainer and test data."""
+        np.random.seed(42)
+        n_samples = 60
 
-    #     assert result.shap_values.shape == (1, 2)
+        index = pd.MultiIndex.from_arrays(
+            [
+                np.repeat(["A", "B", "C"], n_samples // 3),
+                pd.date_range("2023-01-01", periods=n_samples, freq="h"),
+            ],
+            names=["level", "date"],
+        )
 
-    # @pytest.mark.slow
-    # def test_mean_abs_shap(
-    #     self,
-    #     small_data: tuple[pd.DataFrame, pd.Series],
-    #     fitted_model_small: RandomForestRegressor,
-    # ) -> None:
-    #     """Test computing mean absolute SHAP values."""
-    #     from xeries.importance.shap import ConditionalSHAP
+        X = pd.DataFrame(
+            {
+                "lag_1": np.random.randn(n_samples),
+                "lag_2": np.random.randn(n_samples),
+                "exog_1": np.random.randn(n_samples),
+            },
+            index=index,
+        )
+        y = X["lag_1"] * 0.5 + X["lag_2"] * 0.3 + np.random.randn(n_samples) * 0.1
 
-    #     X, _ = small_data
-    #     explainer = ConditionalSHAP(
-    #         model=fitted_model_small,
-    #         background_data=X,
-    #         series_col="level",
-    #         n_background_samples=5,
-    #         random_state=42,
-    #     )
+        model = RandomForestRegressor(n_estimators=5, max_depth=3, random_state=42)
+        model.fit(X.values, y.values)
 
-    #     result = explainer.explain(X.iloc[:5])
-    #     mean_abs = result.mean_abs_shap()
+        explainer = ConditionalSHAP(model, X, series_col="level")
 
-    #     assert isinstance(mean_abs, pd.DataFrame)
-    #     assert "feature" in mean_abs.columns
-    #     assert "mean_abs_shap" in mean_abs.columns
-    #     assert len(mean_abs) == 2
+        return explainer, X
 
-    # @pytest.mark.slow
-    # def test_global_importance(
-    #     self,
-    #     small_data: tuple[pd.DataFrame, pd.Series],
-    #     fitted_model_small: RandomForestRegressor,
-    # ) -> None:
-    #     """Test computing global importance."""
-    #     from xeries.importance.shap import ConditionalSHAP
+    def test_explain_returns_shap_result(
+        self, explainer_and_data: tuple[ConditionalSHAP, pd.DataFrame]
+    ) -> None:
+        """Test that explain returns SHAPResult."""
+        explainer, X = explainer_and_data
+        result = explainer.explain(X.iloc[:10])
 
-    #     X, _ = small_data
-    #     explainer = ConditionalSHAP(
-    #         model=fitted_model_small,
-    #         background_data=X,
-    #         series_col="level",
-    #         n_background_samples=5,
-    #         random_state=42,
-    #     )
+        assert isinstance(result, SHAPResult)
 
-    #     global_imp = explainer.global_importance(X, n_samples=5)
+    def test_explain_shap_values_shape(
+        self, explainer_and_data: tuple[ConditionalSHAP, pd.DataFrame]
+    ) -> None:
+        """Test SHAP values have correct shape."""
+        explainer, X = explainer_and_data
+        result = explainer.explain(X.iloc[:10])
 
-    #     assert isinstance(global_imp, pd.DataFrame)
-    #     assert len(global_imp) == 2
+        assert result.shap_values.shape == (10, 3)
+        assert len(result.base_values) == 10
+        assert result.feature_names == ["lag_1", "lag_2", "exog_1"]
 
-    # def test_series_backgrounds_prepared(
-    #     self,
-    #     small_data: tuple[pd.DataFrame, pd.Series],
-    #     fitted_model_small: RandomForestRegressor,
-    # ) -> None:
-    #     """Test that series-specific backgrounds are prepared."""
-    #     from xeries.importance.shap import ConditionalSHAP
+    def test_explain_tracks_series_ids(
+        self, explainer_and_data: tuple[ConditionalSHAP, pd.DataFrame]
+    ) -> None:
+        """Test that series_ids are tracked in result."""
+        explainer, X = explainer_and_data
+        result = explainer.explain(X)
 
-    #     X, _ = small_data
-    #     explainer = ConditionalSHAP(
-    #         model=fitted_model_small,
-    #         background_data=X,
-    #         series_col="level",
-    #         n_background_samples=5,
-    #         random_state=42,
-    #     )
+        assert result.series_ids is not None
+        assert len(result.series_ids) == len(X)
 
-    #     assert "A" in explainer._series_backgrounds
-    #     assert "B" in explainer._series_backgrounds
-    #     assert "C" in explainer._series_backgrounds
-    #     assert len(explainer._series_backgrounds["A"]) <= 5
+    def test_explain_with_explicit_features(
+        self, explainer_and_data: tuple[ConditionalSHAP, pd.DataFrame]
+    ) -> None:
+        """Test explain with explicit feature names."""
+        explainer, X = explainer_and_data
+        result = explainer.explain(X.iloc[:10], feature_names=["lag_1", "lag_2"])
 
-    # @pytest.mark.slow
-    # def test_shap_values_shape_consistency(
-    #     self,
-    #     small_data: tuple[pd.DataFrame, pd.Series],
-    #     fitted_model_small: RandomForestRegressor,
-    # ) -> None:
-    #     """Test that SHAP values have correct shape for varying sample sizes.
+        assert result.shap_values.shape == (10, 2)
+        assert result.feature_names == ["lag_1", "lag_2"]
 
-    #     This test verifies the fix for the issue where shap_values[0] was
-    #     incorrectly extracting single elements instead of feature arrays.
-    #     """
-    #     from xeries.importance.shap import ConditionalSHAP
+    def test_explain_full_dataset(
+        self, explainer_and_data: tuple[ConditionalSHAP, pd.DataFrame]
+    ) -> None:
+        """Test explain on full dataset."""
+        explainer, X = explainer_and_data
+        result = explainer.explain(X)
 
-    #     X, _ = small_data
-    #     n_features = X.shape[1]
-    #     explainer = ConditionalSHAP(
-    #         model=fitted_model_small,
-    #         background_data=X,
-    #         series_col="level",
-    #         n_background_samples=5,
-    #         random_state=42,
-    #     )
+        assert result.shap_values.shape == (len(X), 3)
+        assert len(result.base_values) == len(X)
 
-    #     # Test single instance
-    #     result_single = explainer.explain(X.iloc[[0]])
-    #     assert result_single.shap_values.shape == (1, n_features)
-    #     assert result_single.shap_values.ndim == 2
 
-    #     # Test multiple instances
-    #     result_multi = explainer.explain(X.iloc[:5])
-    #     assert result_multi.shap_values.shape == (5, n_features)
-    #     assert result_multi.shap_values.ndim == 2
+class TestConditionalSHAPExplainPerSeries:
+    """Tests for ConditionalSHAP explain_per_series method."""
 
-    #     # Verify mean_abs_shap works correctly (requires 2D array)
-    #     mean_abs = result_multi.mean_abs_shap()
-    #     assert len(mean_abs) == n_features
-    #     assert all(mean_abs["mean_abs_shap"] >= 0)
+    @pytest.fixture
+    def explainer_and_data(self) -> tuple[ConditionalSHAP, pd.DataFrame]:
+        """Create explainer and test data."""
+        np.random.seed(42)
+        n_samples = 60
+
+        index = pd.MultiIndex.from_arrays(
+            [
+                np.repeat(["A", "B", "C"], n_samples // 3),
+                pd.date_range("2023-01-01", periods=n_samples, freq="h"),
+            ],
+            names=["level", "date"],
+        )
+
+        X = pd.DataFrame(
+            {
+                "lag_1": np.random.randn(n_samples),
+                "lag_2": np.random.randn(n_samples),
+                "exog_1": np.random.randn(n_samples),
+            },
+            index=index,
+        )
+        y = X["lag_1"] * 0.5 + X["lag_2"] * 0.3 + np.random.randn(n_samples) * 0.1
+
+        model = RandomForestRegressor(n_estimators=5, max_depth=3, random_state=42)
+        model.fit(X.values, y.values)
+
+        explainer = ConditionalSHAP(model, X, series_col="level")
+
+        return explainer, X
+
+    def test_explain_per_series_returns_dict(
+        self, explainer_and_data: tuple[ConditionalSHAP, pd.DataFrame]
+    ) -> None:
+        """Test that explain_per_series returns dictionary."""
+        explainer, X = explainer_and_data
+        results = explainer.explain_per_series(X)
+
+        assert isinstance(results, dict)
+        assert len(results) == 3
+        assert set(results.keys()) == {"A", "B", "C"}
+
+    def test_explain_per_series_result_types(
+        self, explainer_and_data: tuple[ConditionalSHAP, pd.DataFrame]
+    ) -> None:
+        """Test that each result is a SHAPResult."""
+        explainer, X = explainer_and_data
+        results = explainer.explain_per_series(X)
+
+        for _series_id, result in results.items():
+            assert isinstance(result, SHAPResult)
+
+    def test_explain_per_series_correct_samples(
+        self, explainer_and_data: tuple[ConditionalSHAP, pd.DataFrame]
+    ) -> None:
+        """Test that each series has correct number of samples."""
+        explainer, X = explainer_and_data
+        results = explainer.explain_per_series(X)
+
+        for _series_id, result in results.items():
+            assert result.shap_values.shape[0] == 20
+
+    def test_explain_per_series_min_samples(
+        self, explainer_and_data: tuple[ConditionalSHAP, pd.DataFrame]
+    ) -> None:
+        """Test min_samples filtering."""
+        explainer, X = explainer_and_data
+        results = explainer.explain_per_series(X, min_samples=25)
+
+        assert len(results) == 0
+
+    def test_explain_per_series_series_ids_tracked(
+        self, explainer_and_data: tuple[ConditionalSHAP, pd.DataFrame]
+    ) -> None:
+        """Test that series_ids are set in each result."""
+        explainer, X = explainer_and_data
+        results = explainer.explain_per_series(X)
+
+        for series_id, result in results.items():
+            assert result.series_ids is not None
+            assert all(sid == series_id for sid in result.series_ids)
+
+
+class TestConditionalSHAPMethods:
+    """Tests for ConditionalSHAP utility methods."""
+
+    @pytest.fixture
+    def explainer_and_data(self) -> tuple[ConditionalSHAP, pd.DataFrame]:
+        """Create explainer and test data."""
+        np.random.seed(42)
+        n_samples = 60
+
+        index = pd.MultiIndex.from_arrays(
+            [
+                np.repeat(["A", "B", "C"], n_samples // 3),
+                pd.date_range("2023-01-01", periods=n_samples, freq="h"),
+            ],
+            names=["level", "date"],
+        )
+
+        X = pd.DataFrame(
+            {
+                "lag_1": np.random.randn(n_samples),
+                "lag_2": np.random.randn(n_samples),
+                "exog_1": np.random.randn(n_samples),
+            },
+            index=index,
+        )
+        y = X["lag_1"] * 0.5 + X["lag_2"] * 0.3 + np.random.randn(n_samples) * 0.1
+
+        model = RandomForestRegressor(n_estimators=5, max_depth=3, random_state=42)
+        model.fit(X.values, y.values)
+
+        explainer = ConditionalSHAP(model, X, series_col="level")
+
+        return explainer, X
+
+    def test_explain_instance(
+        self, explainer_and_data: tuple[ConditionalSHAP, pd.DataFrame]
+    ) -> None:
+        """Test explain_instance method."""
+        explainer, X = explainer_and_data
+        instance = X.iloc[0]
+        result = explainer.explain_instance(instance)
+
+        assert isinstance(result, SHAPResult)
+        assert result.shap_values.shape == (1, 3)
+
+    def test_global_importance(
+        self, explainer_and_data: tuple[ConditionalSHAP, pd.DataFrame]
+    ) -> None:
+        """Test global_importance method."""
+        explainer, X = explainer_and_data
+        importance = explainer.global_importance(X)
+
+        assert isinstance(importance, pd.DataFrame)
+        assert "feature" in importance.columns
+        assert "mean_abs_shap" in importance.columns
+        assert len(importance) == 3
+
+    def test_global_importance_with_sampling(
+        self, explainer_and_data: tuple[ConditionalSHAP, pd.DataFrame]
+    ) -> None:
+        """Test global_importance with n_samples parameter."""
+        explainer, X = explainer_and_data
+        importance = explainer.global_importance(X, n_samples=10)
+
+        assert isinstance(importance, pd.DataFrame)
+
+
+class TestSHAPResultMethods:
+    """Tests for SHAPResult methods."""
+
+    @pytest.fixture
+    def sample_result(self) -> SHAPResult:
+        """Create sample SHAPResult."""
+        np.random.seed(42)
+        n_samples = 30
+
+        shap_values = np.random.randn(n_samples, 3)
+        base_values = np.random.randn(n_samples)
+        feature_names = ["feature_1", "feature_2", "feature_3"]
+        data = pd.DataFrame(np.random.randn(n_samples, 3), columns=feature_names)
+        series_ids = pd.Series(np.repeat(["A", "B", "C"], n_samples // 3))
+
+        return SHAPResult(
+            shap_values=shap_values,
+            base_values=base_values,
+            feature_names=feature_names,
+            data=data,
+            series_ids=series_ids,
+        )
+
+    def test_to_dataframe(self, sample_result: SHAPResult) -> None:
+        """Test to_dataframe method."""
+        df = sample_result.to_dataframe()
+
+        assert isinstance(df, pd.DataFrame)
+        assert list(df.columns) == sample_result.feature_names
+        assert len(df) == len(sample_result.shap_values)
+
+    def test_mean_abs_shap(self, sample_result: SHAPResult) -> None:
+        """Test mean_abs_shap method."""
+        df = sample_result.mean_abs_shap()
+
+        assert isinstance(df, pd.DataFrame)
+        assert "feature" in df.columns
+        assert "mean_abs_shap" in df.columns
+        assert len(df) == 3
+
+    def test_mean_abs_shap_by_series(self, sample_result: SHAPResult) -> None:
+        """Test mean_abs_shap_by_series method."""
+        df = sample_result.mean_abs_shap_by_series()
+
+        assert isinstance(df, pd.DataFrame)
+        assert set(df.index) == {"A", "B", "C"}
+        assert list(df.columns) == sample_result.feature_names
+
+    def test_mean_abs_shap_by_series_raises_without_series_ids(self) -> None:
+        """Test that mean_abs_shap_by_series raises without series_ids."""
+        result = SHAPResult(
+            shap_values=np.random.randn(10, 3),
+            base_values=np.random.randn(10),
+            feature_names=["f1", "f2", "f3"],
+            data=pd.DataFrame(np.random.randn(10, 3)),
+            series_ids=None,
+        )
+
+        with pytest.raises(ValueError, match="series_ids not set"):
+            result.mean_abs_shap_by_series()
+
+
+class TestExplainerTypeDetection:
+    """Tests for explainer type auto-detection."""
+
+    def test_detects_random_forest_as_tree(self) -> None:
+        """Test that RandomForest is detected as tree."""
+        X = pd.DataFrame({"a": [1, 2, 3], "level": ["A", "A", "A"]})
+        model = RandomForestRegressor(n_estimators=2, random_state=42)
+        model.fit(X[["a"]], [1, 2, 3])
+
+        explainer = ConditionalSHAP(model, X, series_col="level")
+        assert explainer._is_batch_capable is True
+
+    def test_detects_ridge_as_linear(self) -> None:
+        """Test that Ridge is detected as linear."""
+        X = pd.DataFrame({"a": [1, 2, 3], "level": ["A", "A", "A"]})
+        model = Ridge()
+        model.fit(X[["a"]], [1, 2, 3])
+
+        explainer = ConditionalSHAP(model, X, series_col="level")
+        assert explainer._is_batch_capable is True
+
+
+class TestBackgroundStrategies:
+    """Tests for different background strategies."""
+
+    @pytest.fixture
+    def sample_data(self) -> tuple[pd.DataFrame, RandomForestRegressor]:
+        """Create sample data and model."""
+        np.random.seed(42)
+        n_samples = 60
+
+        X = pd.DataFrame(
+            {
+                "lag_1": np.random.randn(n_samples),
+                "lag_2": np.random.randn(n_samples),
+                "level": np.repeat(["A", "B", "C"], n_samples // 3),
+            }
+        )
+        y = X["lag_1"] * 0.5 + X["lag_2"] * 0.3
+
+        model = RandomForestRegressor(n_estimators=2, random_state=42)
+        model.fit(X[["lag_1", "lag_2"]], y)
+
+        return X, model
+
+    def test_series_background_prepares_per_series(
+        self, sample_data: tuple[pd.DataFrame, RandomForestRegressor]
+    ) -> None:
+        """Test series strategy prepares backgrounds per series."""
+        X, model = sample_data
+        explainer = ConditionalSHAP(
+            model,
+            X,
+            series_col="level",
+            explainer_type="kernel",
+            background_strategy="series",
+        )
+
+        assert len(explainer._series_backgrounds) == 3
+        assert "A" in explainer._series_backgrounds
+        assert "B" in explainer._series_backgrounds
+        assert "C" in explainer._series_backgrounds
+
+    def test_global_background_prepares_once(
+        self, sample_data: tuple[pd.DataFrame, RandomForestRegressor]
+    ) -> None:
+        """Test global strategy prepares single background."""
+        X, model = sample_data
+        explainer = ConditionalSHAP(
+            model,
+            X,
+            series_col="level",
+            explainer_type="kernel",
+            background_strategy="global",
+        )
+
+        assert len(explainer._series_backgrounds) == 0

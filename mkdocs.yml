@@ -1,8 +1,8 @@
 site_name: xeries
 site_description: Conditional Feature Importance for Multi-Time Series Forecasting
-site_url: https://thec0dewriter.github.io/xeries
-repo_url: https://github.com/thec0dewriter/xeries
-repo_name: thec0dewriter/xeries
+site_url: https://xeries-labs.github.io/xeries
+repo_url: https://github.com/xeries-labs/xeries
+repo_name: xeries-labs/xeries
 
 theme:
   name: material
@@ -90,8 +90,10 @@ nav:
       - Importance: api/importance.md
       - Partitioners: api/partitioners.md
       - Adapters: api/adapters.md
+  - Contributing:
+      - Spec-Driven Development: contributing-sdd.md
 
 extra:
   social:
     - icon: fontawesome/brands/github
-      link: https://github.com/thec0dewriter/xeries
+      link: https://github.com/xeries-labs/xeries

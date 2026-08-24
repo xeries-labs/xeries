@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 import pandas as pd
@@ -51,7 +51,7 @@ def plot_importance_bar(
     if ax is None:
         fig, ax = plt.subplots(figsize=figsize)
     else:
-        fig = cast("Figure", ax.get_figure())
+        fig = ax.get_figure()
 
     y_pos = np.arange(len(df))
     importances = df["importance"].values
@@ -113,7 +113,7 @@ def plot_importance_heatmap(
     if ax is None:
         fig, ax = plt.subplots(figsize=figsize)
     else:
-        fig = cast("Figure", ax.get_figure())
+        fig = ax.get_figure()
 
     im = ax.imshow(df.values, cmap=cmap, aspect="auto")
     ax.set_xticks(np.arange(len(df.columns)))
@@ -214,7 +214,7 @@ def plot_shap_bar(
     if ax is None:
         fig, ax = plt.subplots(figsize=figsize)
     else:
-        fig = cast("Figure", ax.get_figure())
+        fig = ax.get_figure()
 
     y_pos = np.arange(len(df))
     ax.barh(y_pos, df["mean_abs_shap"].values, color=color, alpha=0.8)
@@ -356,7 +356,7 @@ def plot_importance_comparison(
     if ax is None:
         fig, ax = plt.subplots(figsize=figsize)
     else:
-        fig = cast("Figure", ax.get_figure())
+        fig = ax.get_figure()
 
     method_names = list(results.keys())
     n_methods = len(method_names)

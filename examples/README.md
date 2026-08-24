@@ -27,6 +27,7 @@ examples/
 | [01_per_series_importance.ipynb](conditional_permutation/01_per_series_importance.ipynb) | Per-series feature importance analysis | Core xeries |
 | [02_exogenous_features.ipynb](conditional_permutation/02_exogenous_features.ipynb) | Heterogeneous effects of exogenous variables | Core xeries |
 | [03_per_series_exog.ipynb](conditional_permutation/03_per_series_exog.ipynb) | Per-series importance with exogenous features | Core xeries, lightgbm |
+| [04_tree_partitioner.ipynb](conditional_permutation/04_tree_partitioner.ipynb) | TreePartitioner for automatic subgroup discovery | `xeries[skforecast]` |
 
 ### Integrations
 

@@ -61,6 +61,7 @@ In multi-series forecasting, many features are intrinsically tied to their serie
 - **Autoregressive lags**: `lag_1` for Product A is meaningless for Product B
 - **Rolling statistics**: A 7-day rolling mean is series-specific
 - **Series identifiers**: Explicitly tell the model which series a row belongs to
+- **Exogenous features**: May have different distributions across series (e.g., price, promotion)
 
 ### Why Conditional Importance?
 

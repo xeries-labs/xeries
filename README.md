@@ -1,6 +1,6 @@
 # xeries
 
-[![CI](https://github.com/thec0dewriter/xeries/actions/workflows/ci.yml/badge.svg)](https://github.com/thec0dewriter/xeries/actions/workflows/ci.yml)
+[![CI](https://github.com/xeries-labs/xeries/actions/workflows/ci.yml/badge.svg)](https://github.com/xeries-labs/xeries/actions/workflows/ci.yml)
 [![PyPI version](https://badge.fury.io/py/xeries.svg)](https://badge.fury.io/py/xeries)
 [![Python versions](https://img.shields.io/pypi/pyversions/xeries.svg)](https://pypi.org/project/xeries/)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.19482748.svg)](https://doi.org/10.5281/zenodo.19482748)
@@ -8,7 +8,7 @@
 
 **Time Series eXplainability (XAI) for Forecasting**
 
-A comprehensive Python library for explainability and interpretability in multi-time series forecasting. **xeries** provides multiple explanation methods—including conditional permutation importance, SHAP, feature dropping, and causal analysis—with a unified API and interactive dashboard for understanding forecast decisions.
+A comprehensive Python library for explainability and interpretability in multi-time series forecasting. **xeries** provides multiple explanation methods—including conditional permutation importance, SHAP, feature dropping, and causal analysis—through a unified API for understanding forecast decisions.
 
 ## Why xeries?
 
@@ -53,13 +53,12 @@ Ready-to-use plotting utilities for feature importance and temporal analysis.
 - **Publication-Ready Plots**:
   - Feature importance bar charts
   - Heatmaps comparing multiple methods or conditions
-  
-Planned:
-- **Interactive Dashboard**: Unified interface for all explainability components
-  - Method comparison visualizations
-  - Interaction plots
-- **HTML Report Generation**: Auto-generate dashboards with Jinja2 templates
+  - Per-series and method-comparison plots
 - **Jupyter Integration**: Works seamlessly in notebooks
+
+> **Dashboard / HTML reports** (Jinja2-templated reports, interactive widgets, method-comparison
+> dashboards) moved to the sibling `xeries-labs/xeries-dashboard` repo per governance v1.2.0.
+> See roadmap row `specs/013-dashboard`.
 
 ## Installation
 
@@ -175,13 +174,30 @@ The following methods are planned for future releases and are not part of the cu
 
 Full documentation is available at [https://thec0dewriter.github.io/xeries](https://thec0dewriter.github.io/xeries)
 
+## Spec-Driven Development
+
+`xeries` is developed under the **[xeries-labs](https://github.com/xeries-labs)** Spec-Driven Development (SDD) program, governed by [`xeries-labs/xeries-governance`](https://github.com/xeries-labs/xeries-governance) (mounted in this repo as a git submodule at `.specify/`). Before contributing or asking an AI agent to work on this codebase, please read:
+
+- [`AGENTS.md`](./AGENTS.md) — the entry point for human and AI contributors.
+- `.specify/memory/constitution.md` — binding program rules (after `git submodule update --init`).
+- `.specify/memory/roadmap.md` — the program-wide roadmap (xeries + xeries-bench).
+- [`docs/contributing-sdd.md`](./docs/contributing-sdd.md) — full SDD workflow walkthrough (also rendered in the docs site).
+
+Backfilled specifications for the existing public surface live under [`specs/001-…`](./specs/) through [`specs/007-…`](./specs/). New features (e.g. `008-shapiq-explainer`) start with a `spec.md` from `.specify/templates/spec-template.md` and follow the constitution's gates.
+
 ## Development
 
-Clone the repository:
+Clone the repository (with the governance submodule):
 
 ```bash
-git clone https://github.com/thec0dewriter/xeries.git
+git clone --recurse-submodules https://github.com/xeries-labs/xeries.git
 cd xeries
+```
+
+If you cloned without `--recurse-submodules`:
+
+```bash
+git submodule update --init --recursive
 ```
 
 Install with development dependencies:
@@ -218,13 +234,17 @@ uv run mkdocs serve
 
 ## Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+Contributions are welcome under the project's Spec-Driven Development workflow. **Read [`AGENTS.md`](./AGENTS.md) and [`docs/contributing-sdd.md`](./docs/contributing-sdd.md) before starting** — they describe the constitution gates, the spec → plan → tasks flow, and the Repo-scope rules (e.g. why `lightgbm` belongs in `xeries-bench`, not here).
 
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+Short version:
+
+1. Fork the repository.
+2. Open or update a spec under `specs/NNN-<slug>/` (use `.specify/templates/spec-template.md`). For mechanical refactors that preserve the public surface, cite the affected Backfilled spec(s) in the commit message instead of authoring a new one.
+3. For new specs, fill out a `plan.md` and pass the **Constitution Check** gate before writing code.
+4. Create a feature branch (`git checkout -b feature/<short-name>`).
+5. Add tests **before** the implementation commit when you introduce a new public symbol (Principle III — Test-first for new contracts).
+6. Run `uv run ruff check src tests`, `uv run ty check src`, `uv run pytest`, `uv run mkdocs build --strict` locally before pushing.
+7. Open a Pull Request — CI replays the same gates.
 
 ## License
 
@@ -241,7 +261,7 @@ If you use this library in your research, please cite:
   year = {2026},
   doi = {10.5281/zenodo.19482748},
   publisher = {Zenodo},
-  url = {https://github.com/thec0dewriter/xeries},
+  url = {https://github.com/xeries-labs/xeries},
 }
 ```
 
