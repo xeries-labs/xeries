@@ -132,14 +132,31 @@ class ConditionalPermutationImportance(MetricBasedExplainer):
         group_labels = self._get_groups(X, feature, groups)
 
         scores = []
-        for repeat in range(self.n_repeats):
-            rng = np.random.default_rng(self.random_state + repeat if self.random_state else None)
+        for rng in self._repeat_generators():
             X_permuted = self._conditional_permute(X, feature, group_labels, rng)
             permuted_pred = self.model.predict(X_permuted)
             score = self.metric(y, permuted_pred)
             scores.append(score)
 
         return scores
+
+    def _repeat_generators(self):
+        """Yield one independent RNG per permutation repeat.
+
+        Uses :class:`numpy.random.SeedSequence` to derive ``n_repeats``
+        statistically-independent child streams from a single seed, mirroring
+        the approach used by scikit-learn's permutation importance. This keeps
+        every repeat distinct while remaining fully reproducible for any integer
+        ``random_state`` (including ``0``, which is falsy and would be mishandled
+        by a truthiness check). When ``random_state`` is ``None`` the streams are
+        non-deterministic, as expected.
+
+        Yields:
+            np.random.Generator: A fresh generator for each repeat.
+        """
+        seed_sequence = np.random.SeedSequence(self.random_state)
+        for child in seed_sequence.spawn(self.n_repeats):
+            yield np.random.default_rng(child)
 
     def _get_groups(
         self,
@@ -249,10 +266,7 @@ class ConditionalPermutationImportance(MetricBasedExplainer):
                 continue
 
             scores = []
-            for repeat in range(self.n_repeats):
-                rng = np.random.default_rng(
-                    self.random_state + repeat if self.random_state else None
-                )
+            for rng in self._repeat_generators():
                 X_permuted = X.copy()
                 X_permuted[feature] = rng.permutation(X[feature].to_numpy())
                 permuted_pred = self.model.predict(X_permuted)
