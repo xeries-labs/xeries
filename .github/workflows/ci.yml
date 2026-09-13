@@ -103,10 +103,8 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Install dependencies with optional deps
-        run: |
-          uv sync --dev
-          uv pip install skforecast
+      - name: Install dependencies
+        run: uv sync --extra skforecast
 
       - name: Run integration tests
         run: uv run pytest tests -v -m "integration" --tb=short
