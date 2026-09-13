@@ -28,18 +28,21 @@ Explaining and interpreting multi-time series forecasts is challenging:
 
 ## Features
 
-### 📊 Current Capability
+### 📊 Current capability
 
 - **Conditional Permutation Importance (cs-PFI)**: Permute features only within meaningful subgroups
   - Auto-discover groups using decision trees
   - Define custom groups based on domain knowledge
+- **Conditional SHAP**: Local and global attributions with series-aware background data
+- **Hierarchical explanations**: Aggregate importance across series cohorts
+- **Visualization**: Bar charts, heatmaps, per-series and hierarchy plots
 
-### 🛣️ Planned Roadmap
+### 🛣️ Planned roadmap
 
-- **Conditional SHAP**: Planned for a future release
-- **SHAP-IQ**: Planned for a future release
-- **Feature Dropping**: Planned for a future release
-- **Causal Feature Importance**: Planned for a future release
+- **SHAP-IQ**: Feature interactions (future extra)
+- **Feature Dropping**: Complementary to importance
+- **Causal Feature Importance**: Treatment-effect style importance
+- **Darts adapter**: `from_darts` for u8darts global models
 
 ### 📡 Framework Adapters
 
@@ -83,10 +86,12 @@ pip install xeries[skforecast]
 | Method | Status | Use Case | Notes |
 |--------|--------|----------|-------|
 | **Conditional Permutation Importance** | Available | Default choice; fast & interpretable | Auto/manual grouping with tree-based or manual partitioning |
-| **Conditional SHAP** | Planned | Local & global explanations | Future release |
-| **SHAP-IQ** | Planned | Feature interactions | Future release |
+| **Conditional SHAP** | Available | Local & global explanations | Tree/Kernel auto-detect; series-aware background |
+| **Hierarchical explainer** | Available | Multi-level series (store → region, …) | Wraps PFI or SHAP |
+| **SHAP-IQ** | Planned | Feature interactions | Future extra (`xeries[shapiq]`) |
 | **Feature Dropping** | Planned | Complementary to importance | Future release |
-| **Causal Feature Importance** | Planned | Treatment effects | Future release |
+| **Causal Feature Importance** | Planned | Treatment effects | Future extra |
+| **Darts adapter** | Planned | Darts global models | Future extra |
 
 ## Quick Start
 
@@ -163,16 +168,16 @@ fig, ax = plot_importance_heatmap(results)
 
 ## Planned Methods
 
-The following methods are planned for future releases and are not part of the current release:
+The following methods are planned for future releases:
 
-- Conditional SHAP
 - SHAP-IQ
 - Feature Dropping
 - Causal Feature Importance
+- Darts adapter
 
 ## Documentation
 
-Full documentation is available at [https://thec0dewriter.github.io/xeries](https://thec0dewriter.github.io/xeries)
+Full documentation is available at [https://xeries-labs.github.io/xeries](https://xeries-labs.github.io/xeries)
 
 ## Spec-Driven Development
 
@@ -203,7 +208,13 @@ git submodule update --init --recursive
 Install with development dependencies:
 
 ```bash
-uv sync --dev
+uv sync
+```
+
+Notebook extras (Jupyter, matplotlib, LightGBM) and skforecast for examples:
+
+```bash
+uv sync --extra notebooks --extra skforecast
 ```
 
 Run tests:
@@ -230,6 +241,7 @@ Build documentation:
 ```bash
 uv sync --group docs
 uv run mkdocs serve
+# or: uv run mkdocs build --strict
 ```
 
 ## Contributing

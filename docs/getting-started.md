@@ -81,7 +81,7 @@ explainer = ConditionalPermutationImportance(
     n_repeats=5,
 )
 
-result = explainer.compute(X, y, features=['lag_1', 'lag_2'])
+result = explainer.explain(X, y, features=['lag_1', 'lag_2'])
 df = result.to_dataframe()
 ```
 
@@ -106,7 +106,7 @@ X, y = adapter.get_training_data()
 
 # Compute importance
 explainer = ConditionalPermutationImportance(model=adapter, metric='mse')
-result = explainer.compute(X, y)
+result = explainer.explain(X, y)
 ```
 
 ## Visualization
@@ -121,14 +121,15 @@ fig, ax = plot_importance_bar(result, max_features=10)
 
 ## Planned Methods
 
-The following methods are planned for future releases and are not available in the current release:
+The following methods are planned for future releases:
 
-- Conditional SHAP
 - SHAP-IQ
 - Feature Dropping
 - Causal Feature Importance
+- Darts adapter
 
 ## Next Steps
 
 - Follow the [Quickstart Tutorial](tutorials/quickstart.md) for a complete example
+- Browse [Examples](examples.md) for executed notebooks
 - Explore the [API Reference](api/reference.md) for detailed documentation

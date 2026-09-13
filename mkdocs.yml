@@ -36,6 +36,7 @@ plugins:
   - mkdocs-jupyter:
       include_source: true
       execute: false
+      include_requirejs: true
   - mkdocstrings:
       default_handler: python
       handlers:
@@ -48,6 +49,9 @@ plugins:
             show_symbol_type_toc: true
             docstring_style: google
             merge_init_into_class: true
+
+hooks:
+  - mkdocs_hooks.py
 
 markdown_extensions:
   - pymdownx.highlight:
@@ -71,18 +75,27 @@ nav:
   - Home: index.md
   - Getting Started: getting-started.md
   - Architecture:
-      - Overview: architecture/structure.md
-      - API Structure: architecture/api_structure.md
-      - Inheritance Diagrams: architecture/inheritance_diagrams.md
+      - Overview: architecture/index.md
+      - Core: architecture/core.md
+      - Importance: architecture/importance.md
+      - Partitioners: architecture/partitioners.md
+      - Adapters: architecture/adapters.md
+      - Hierarchy: architecture/hierarchy.md
+      - Visualization: architecture/visualization.md
   - Tutorials:
       - Quickstart: tutorials/quickstart.md
   - Examples:
+      - Overview: examples.md
       - Quickstart:
           - Basic Usage: examples/quickstart/01_basic_usage.ipynb
       - Conditional Permutation:
           - Per-Series Importance: examples/conditional_permutation/01_per_series_importance.ipynb
           - Exogenous Features: examples/conditional_permutation/02_exogenous_features.ipynb
           - Per-Series with Exogenous: examples/conditional_permutation/03_per_series_exog.ipynb
+          - Tree Partitioner: examples/conditional_permutation/04_tree_partitioner.ipynb
+      - Hierarchical:
+          - Demand Forecasting: examples/hierarchical/01_hierarchical_demand_forecasting.ipynb
+          - Per-Series SHAP: examples/hierarchical/02_per_series_shap.ipynb
       - Integrations:
           - Skforecast: examples/integrations/01_skforecast.ipynb
   - API Reference:
@@ -90,6 +103,8 @@ nav:
       - Importance: api/importance.md
       - Partitioners: api/partitioners.md
       - Adapters: api/adapters.md
+      - Hierarchy: api/hierarchy.md
+      - Visualization: api/visualization.md
   - Contributing:
       - Spec-Driven Development: contributing-sdd.md
 

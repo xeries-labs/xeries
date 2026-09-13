@@ -56,6 +56,7 @@ This repo contains both kinds:
 | Spec ID | Title | Status |
 | --- | --- | --- |
 | `008-shapiq-explainer` | `ConditionalSHAPIQ` — any-order Shapley **interactions** via `shapiq` (TreeSHAP-IQ for tree ensembles, fallback `TabularExplainer`). | Planned (active — article-driven) |
+| `014-docs-packaging-cleanup` | Docs nav/API honesty, example notebooks on the MkDocs site with saved outputs, Hatch/uv extras and lockfile hygiene. No public `src/` API change. | Active |
 
 See `.specify/memory/roadmap.md` for the full program roadmap, including
 specs whose Home repo is `xeries-bench` (e.g. `009-interaction-benchmark`).

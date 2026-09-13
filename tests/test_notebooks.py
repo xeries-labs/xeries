@@ -2,34 +2,51 @@
 
 from __future__ import annotations
 
+import json
+import os
 import traceback
 from pathlib import Path
 
-import nbformat
 import pytest
-from nbclient import NotebookClient
 
 EXAMPLES_DIR = Path(__file__).parent.parent / "examples"
 
 
 def get_notebook_files() -> list[Path]:
-    """Get all notebook files in the examples directory."""
+    """Return all notebooks under examples/, excluding checkpoints."""
     if not EXAMPLES_DIR.exists():
         return []
-    return list(EXAMPLES_DIR.glob("*.ipynb"))
+    return sorted(
+        path for path in EXAMPLES_DIR.rglob("*.ipynb") if ".ipynb_checkpoints" not in path.parts
+    )
+
+
+def _rel(path: Path) -> str:
+    return path.relative_to(EXAMPLES_DIR).as_posix()
+
+
+NOTEBOOKS = get_notebook_files()
+NOTEBOOK_IDS = [_rel(path) for path in NOTEBOOKS]
 
 
 @pytest.fixture
 def notebook_executor():
-    """Fixture to execute notebooks."""
+    """Execute a notebook with the current interpreter."""
+    nbformat = pytest.importorskip("nbformat")
+    nbclient = pytest.importorskip("nbclient")
 
-    def _execute(notebook_path: Path, timeout: int = 300) -> tuple[bool, str]:
-        """Execute a notebook and return success status and output."""
+    def _execute(notebook_path: Path, timeout: int = 600) -> tuple[bool, str]:
+        os.environ.setdefault("MPLBACKEND", "Agg")
         try:
             with notebook_path.open(encoding="utf-8") as f:
                 notebook = nbformat.read(f, as_version=4)
 
-            client = NotebookClient(notebook, timeout=timeout, allow_errors=True)
+            client = nbclient.NotebookClient(
+                notebook,
+                timeout=timeout,
+                allow_errors=False,
+                kernel_name="python3",
+            )
             client.execute()
             return True, ""
         except Exception:
@@ -40,82 +57,48 @@ def notebook_executor():
 
 @pytest.mark.notebook
 @pytest.mark.slow
-class TestNotebooks:
-    """Test suite for example notebooks."""
+@pytest.mark.parametrize("notebook_path", NOTEBOOKS, ids=NOTEBOOK_IDS)
+def test_notebook_executes(notebook_path: Path, notebook_executor) -> None:
+    """Execute each example notebook without errors."""
+    success, output = notebook_executor(notebook_path)
+    if not success:
+        pytest.fail(f"Notebook execution failed ({_rel(notebook_path)}):\n{output}")
 
-    @pytest.mark.parametrize(
-        "notebook_name",
-        ["01_quickstart.ipynb"],
-    )
-    def test_quickstart_notebook(
-        self,
-        notebook_name: str,
-        notebook_executor,
-    ) -> None:
-        """Test that the quickstart notebook executes without errors."""
-        notebook_path = EXAMPLES_DIR / notebook_name
-        if not notebook_path.exists():
-            pytest.skip(f"Notebook not found: {notebook_path}")
 
-        success, output = notebook_executor(notebook_path)
-
-        if not success:
-            pytest.fail(f"Notebook execution failed:\n{output}")
-
-    @pytest.mark.integration
-    @pytest.mark.parametrize(
-        "notebook_name",
-        ["02_skforecast_integration.ipynb"],
-    )
-    def test_skforecast_notebook(
-        self,
-        notebook_name: str,
-        notebook_executor,
-    ) -> None:
-        """Test skforecast integration notebook (requires skforecast)."""
-        pytest.importorskip("skforecast")
-
-        notebook_path = EXAMPLES_DIR / notebook_name
-        if not notebook_path.exists():
-            pytest.skip(f"Notebook not found: {notebook_path}")
-
-        success, output = notebook_executor(notebook_path)
-
-        if not success:
-            pytest.fail(f"Notebook execution failed:\n{output}")
+@pytest.mark.notebook
+def test_notebooks_are_discovered() -> None:
+    """Nested example notebooks must be found (not only the examples/ root)."""
+    assert NOTEBOOKS, "No notebooks found under examples/"
+    nested = [path for path in NOTEBOOKS if path.parent != EXAMPLES_DIR]
+    assert nested, "Expected notebooks in examples/ subdirectories"
+    assert any("quickstart" in _rel(path) for path in NOTEBOOKS)
 
 
 @pytest.mark.notebook
 def test_notebooks_are_valid_json() -> None:
     """Test that all notebooks are valid JSON."""
-    import json
-
     notebooks = get_notebook_files()
-    if not notebooks:
-        pytest.skip("No notebooks found")
+    assert notebooks, "No notebooks found"
 
     for nb_path in notebooks:
         try:
-            with open(nb_path, encoding="utf-8") as f:
+            with nb_path.open(encoding="utf-8") as f:
                 json.load(f)
         except json.JSONDecodeError as e:
-            pytest.fail(f"Invalid JSON in {nb_path.name}: {e}")
+            pytest.fail(f"Invalid JSON in {_rel(nb_path)}: {e}")
 
 
 @pytest.mark.notebook
 def test_notebooks_have_valid_structure() -> None:
     """Test that all notebooks have valid nbformat structure."""
-    import json
-
     notebooks = get_notebook_files()
-    if not notebooks:
-        pytest.skip("No notebooks found")
+    assert notebooks, "No notebooks found"
 
     for nb_path in notebooks:
-        with open(nb_path, encoding="utf-8") as f:
+        with nb_path.open(encoding="utf-8") as f:
             nb = json.load(f)
 
-        assert "cells" in nb, f"Missing 'cells' in {nb_path.name}"
-        assert "metadata" in nb, f"Missing 'metadata' in {nb_path.name}"
-        assert "nbformat" in nb, f"Missing 'nbformat' in {nb_path.name}"
-        assert nb["nbformat"] >= 4, f"nbformat too old in {nb_path.name}"
+        assert "cells" in nb, f"Missing 'cells' in {_rel(nb_path)}"
+        assert "metadata" in nb, f"Missing 'metadata' in {_rel(nb_path)}"
+        assert "nbformat" in nb, f"Missing 'nbformat' in {_rel(nb_path)}"
+        assert nb["nbformat"] >= 4, f"nbformat too old in {_rel(nb_path)}"

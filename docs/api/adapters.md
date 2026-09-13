@@ -15,6 +15,13 @@ Integration with skforecast's ``ForecasterRecursiveMultiSeries`` (0.21+).
 
 ::: xeries.adapters.skforecast.from_skforecast
 
+## SklearnAdapter
+
+::: xeries.adapters.sklearn.SklearnAdapter
+    options:
+      show_root_heading: true
+      show_source: true
+
 ## Base Adapter
 
 ::: xeries.adapters.base.BaseAdapter

@@ -79,7 +79,7 @@ jobs:
         run: uv sync --dev
 
       - name: Run tests
-        run: uv run pytest tests -v --cov=xeries --cov-report=xml -m "not slow and not integration"
+        run: uv run pytest tests -v --cov=xeries --cov-report=xml -m "not slow and not integration and not notebook"
 
       - name: Upload coverage to Codecov
         if: matrix.python-version == '3.11'
@@ -103,10 +103,8 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Install dependencies with optional deps
-        run: |
-          uv sync --dev
-          uv pip install skforecast
+      - name: Install dependencies
+        run: uv sync --extra skforecast
 
       - name: Run integration tests
         run: uv run pytest tests -v -m "integration" --tb=short
@@ -127,10 +125,15 @@ jobs:
           python-version: "3.11"
 
       - name: Install dependencies with notebook support
-        run: uv sync --dev
+        run: uv sync --extra notebooks --extra skforecast
+
+      - name: Register Jupyter kernel
+        run: uv run python -m ipykernel install --user --name python3
 
       - name: Run notebook structure tests
         run: uv run pytest tests/test_notebooks.py -v -m "notebook and not slow" --tb=short
 
       - name: Run notebook execution tests
+        env:
+          MPLBACKEND: Agg
         run: uv run pytest tests/test_notebooks.py -v -m "notebook and slow" --tb=short

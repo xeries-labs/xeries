@@ -1,7 +1,5 @@
 # Importance Methods
 
-This module contains the feature importance calculation methods.
-
 ## ConditionalPermutationImportance
 
 ::: xeries.importance.permutation.ConditionalPermutationImportance
@@ -10,13 +8,31 @@ This module contains the feature importance calculation methods.
       show_source: true
       members:
         - __init__
-        - compute
+        - explain
 
-## Planned Methods
+## ConditionalSHAP
 
-The following importance methods are planned for future releases and are not part of the current release:
+::: xeries.importance.shap.ConditionalSHAP
+    options:
+      show_root_heading: true
+      show_source: true
+      members:
+        - __init__
+        - explain
+        - explain_per_series
 
-- Conditional SHAP
+## Result types
+
+::: xeries.core.types.FeatureImportanceResult
+    options:
+      show_root_heading: true
+
+::: xeries.core.types.SHAPResult
+    options:
+      show_root_heading: true
+
+## Planned methods
+
 - SHAP-IQ
-- Feature Dropping
-- Causal Feature Importance
+- Feature dropping
+- Causal feature importance
