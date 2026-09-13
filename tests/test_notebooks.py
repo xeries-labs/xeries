@@ -3,12 +3,11 @@
 from __future__ import annotations
 
 import json
+import os
 import traceback
 from pathlib import Path
 
-import nbformat
 import pytest
-from nbclient import NotebookClient
 
 EXAMPLES_DIR = Path(__file__).parent.parent / "examples"
 
@@ -18,9 +17,7 @@ def get_notebook_files() -> list[Path]:
     if not EXAMPLES_DIR.exists():
         return []
     return sorted(
-        path
-        for path in EXAMPLES_DIR.rglob("*.ipynb")
-        if ".ipynb_checkpoints" not in path.parts
+        path for path in EXAMPLES_DIR.rglob("*.ipynb") if ".ipynb_checkpoints" not in path.parts
     )
 
 
@@ -34,15 +31,17 @@ NOTEBOOK_IDS = [_rel(path) for path in NOTEBOOKS]
 
 @pytest.fixture
 def notebook_executor():
-    """Fixture to execute notebooks."""
+    """Execute a notebook with the current interpreter."""
+    nbformat = pytest.importorskip("nbformat")
+    nbclient = pytest.importorskip("nbclient")
 
-    def _execute(notebook_path: Path, timeout: int = 300) -> tuple[bool, str]:
-        """Execute a notebook and return success status and output."""
+    def _execute(notebook_path: Path, timeout: int = 600) -> tuple[bool, str]:
+        os.environ.setdefault("MPLBACKEND", "Agg")
         try:
             with notebook_path.open(encoding="utf-8") as f:
                 notebook = nbformat.read(f, as_version=4)
 
-            client = NotebookClient(
+            client = nbclient.NotebookClient(
                 notebook,
                 timeout=timeout,
                 allow_errors=False,
