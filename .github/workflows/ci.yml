@@ -127,7 +127,7 @@ jobs:
           python-version: "3.11"
 
       - name: Install dependencies with notebook support
-        run: uv sync --dev
+        run: uv sync --extra notebooks
 
       - name: Run notebook structure tests
         run: uv run pytest tests/test_notebooks.py -v -m "notebook and not slow" --tb=short

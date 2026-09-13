@@ -7,8 +7,8 @@ authors:
     given-names: "Mátyás"
     email: "kutikmatyas@gmail.com"
     orcid: "https://orcid.org/0009-0004-4997-2000"
-repository-code: "https://github.com/thec0dewriter/xeries"
-url: "https://github.com/thec0dewriter/xeries"
+repository-code: "https://github.com/xeries-labs/xeries"
+url: "https://xeries-labs.github.io/xeries"
 license: "MIT"
 doi: "10.5281/zenodo.19482748"
 keywords:

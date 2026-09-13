@@ -14,8 +14,10 @@ When using global models for multi-time series forecasting, standard feature imp
 - **Conditional Permutation Importance**: Permutes features only within meaningful subgroups
 - **Tree-Based cs-PFI**: Automatically learns homogeneous subgroups using decision trees
 - **Manual Grouping**: Use domain knowledge to define custom permutation groups
-- **Planned Methods**: Conditional SHAP, SHAP-IQ, feature dropping, and causal feature importance are planned for future releases
-- **Framework Integration**: Works with skforecast
+- **Conditional SHAP**: Series-aware SHAP explanations (Tree/Kernel auto-detect)
+- **Hierarchical explanations**: Aggregate importance across series cohorts
+- **Planned Methods**: SHAP-IQ, feature dropping, causal feature importance, and a Darts adapter
+- **Framework Integration**: Works with scikit-learn and skforecast
 
 ## Installation
 
@@ -73,4 +75,5 @@ Standard permutation importance shuffles feature values across the entire datase
 
 - [Getting Started](getting-started.md): Detailed setup and first steps
 - [Quickstart Tutorial](tutorials/quickstart.md): End-to-end example with skforecast
+- [Examples](examples.md): Executed notebooks with plots and tables
 - [API Reference](api/reference.md): Complete API documentation

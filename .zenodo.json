@@ -24,7 +24,7 @@
   ],
   "related_identifiers": [
     {
-      "identifier": "https://github.com/thec0dewriter/xeries",
+      "identifier": "https://github.com/xeries-labs/xeries",
       "relation": "isSupplementTo",
       "resource_type": "software"
     },

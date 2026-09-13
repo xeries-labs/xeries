@@ -85,7 +85,7 @@ explainer = ConditionalPermutationImportance(
 )
 
 # Compute importance for lag features
-result = explainer.compute(X, y, features=['lag_1', 'lag_2', 'lag_3'])
+result = explainer.explain(X, y, features=['lag_1', 'lag_2', 'lag_3'])
 
 # View results
 print(result.to_dataframe())
@@ -115,7 +115,7 @@ explainer_manual = ConditionalPermutationImportance(
     random_state=42,
 )
 
-result_manual = explainer_manual.compute(X, y, features=['lag_1', 'lag_2'])
+result_manual = explainer_manual.explain(X, y, features=['lag_1', 'lag_2'])
 print(result_manual.to_dataframe())
 ```
 
@@ -139,12 +139,12 @@ fig.savefig('importance_comparison.png')
 
 ## Planned Methods
 
-The following methods are planned for future releases and are not available in the current release:
+The following methods are planned for future releases:
 
-- Conditional SHAP
 - SHAP-IQ
 - Feature Dropping
 - Causal Feature Importance
+- Darts adapter
 
 ## Complete Script
 
@@ -184,7 +184,7 @@ X, y = adapter.get_training_data()
 explainer = ConditionalPermutationImportance(
     model=adapter, metric='mse', strategy='auto', n_repeats=3, random_state=42
 )
-result = explainer.compute(X, y)
+result = explainer.explain(X, y)
 
 # Display and plot
 print(result.to_dataframe())

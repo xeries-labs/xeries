@@ -1,42 +1,35 @@
 # API Reference
 
-This page provides an overview of the xeries API.
+This page is a map of the public surface. Full signatures live on the module pages.
 
-## Main Classes
+## Explainers
 
-### ConditionalPermutationImportance
+- [ConditionalPermutationImportance](importance.md) — cs-PFI (`explain`)
+- [ConditionalSHAP](importance.md) — series-aware SHAP (`explain`, `explain_per_series`)
+- [HierarchicalExplainer](hierarchy.md) — aggregate explanations by cohort
 
-::: xeries.importance.permutation.ConditionalPermutationImportance
+## Partitioners
 
-### ManualPartitioner
+- [ManualPartitioner](partitioners.md)
+- [TreePartitioner](partitioners.md)
 
-::: xeries.partitioners.manual.ManualPartitioner
+## Adapters
 
-### TreePartitioner
+- [from_skforecast](adapters.md) / [SkforecastAdapter](adapters.md)
+- [SklearnAdapter](adapters.md)
 
-::: xeries.partitioners.tree.TreePartitioner
+## Result types
 
-## Result Types
-
-### FeatureImportanceResult
-
-::: xeries.core.types.FeatureImportanceResult
+- `FeatureImportanceResult` and `SHAPResult` — see [Importance](importance.md)
+- `HierarchicalResult` — see [Hierarchy](hierarchy.md)
 
 ## Visualization
 
-### plot_importance_bar
-
-::: xeries.visualization.plots.plot_importance_bar
-
-### plot_importance_heatmap
-
-::: xeries.visualization.plots.plot_importance_heatmap
+- [Importance, SHAP, and hierarchy plots](visualization.md)
 
 ## Planned APIs
 
-The following APIs are planned for future releases and are not part of the current release:
-
-- Conditional SHAP
-- SHAP-IQ
-- Feature Dropping
-- Causal Feature Importance
+- SHAP-IQ (`ConditionalSHAPIQ`)
+- Feature dropping
+- Causal feature importance
+- Darts adapter

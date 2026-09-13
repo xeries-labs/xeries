@@ -7,8 +7,8 @@ This guide describes how to release a new version of xeries to PyPI.
 1. **PyPI Trusted Publishing configured**
    - Go to https://pypi.org/manage/project/xeries/settings/publishing/
    - Add a new publisher:
-     - Owner: `thec0dewriter`
-     - Repository: `time_conditional_pfi`
+     - Owner: `xeries-labs`
+     - Repository: `xeries`
      - Workflow name: `release.yml`
      - Environment name: `pypi`
 
@@ -23,7 +23,7 @@ This guide describes how to release a new version of xeries to PyPI.
 
 4. **Zenodo GitHub integration configured**
    - Connect repository in Zenodo: https://zenodo.org/account/settings/github/
-   - Enable archiving for `thec0dewriter/xeries`
+   - Enable archiving for `xeries-labs/xeries`
    - Ensure `.zenodo.json` is present and up to date
    - Current DOI: https://doi.org/10.5281/zenodo.19482748
 

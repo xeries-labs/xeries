@@ -61,7 +61,6 @@ venv.bak/
 
 # UV
 .uv/
-uv.lock
 
 # Ruff
 .ruff_cache/
@@ -78,6 +77,8 @@ uv.lock
 
 # Documentation
 site/
+# Generated at MkDocs build time from ../examples
+docs/examples/
 
 # OS
 .DS_Store
